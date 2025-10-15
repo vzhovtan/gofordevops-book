@@ -1,12 +1,12 @@
 package unittest_test
 
-// the file with unit test for the sum function
+// The file with unit test for the sum function
 import (
 	"github.com/vzhovtan/gofordevops/chapter7/unittest"
 	"testing"
 )
 
-// first test case validates the correct result returned by the function
+// The first test case validates the correct result returned by the function
 func TestAdd1(t *testing.T) {
 	result := unittest.Add(2, 3)
 	expected := 5
@@ -16,7 +16,7 @@ func TestAdd1(t *testing.T) {
 	}
 }
 
-// the second test case validates the bad result returned by the function
+// The second test case validates the bad result returned by the function
 func TestAdd2(t *testing.T) {
 	result := unittest.Add(2, 3)
 	expected := 6
