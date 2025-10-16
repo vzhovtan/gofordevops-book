@@ -1,7 +1,7 @@
 package tdd_test
 
 import (
-	"github.com/vzhovtan/gofordevops/chapter7/tdd"
+	"tdd"
 
 	"testing"
 )

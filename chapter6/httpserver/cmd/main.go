@@ -1,6 +1,6 @@
 package main
 
-import "github.com/vzhovtan/gofordevops/chapter6/httpserver"
+import "httpserver"
 
 func main() {
 	httpserver.StartHttpServer()

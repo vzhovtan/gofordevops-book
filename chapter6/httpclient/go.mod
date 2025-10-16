@@ -1,3 +1,3 @@
-module github.com/vzhovtan/gofordevops/chapter6/httpclient
+module httpclient
 
 go 1.23.2

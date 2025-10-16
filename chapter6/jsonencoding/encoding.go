@@ -1,4 +1,4 @@
-package encoding
+package jsonencoding
 
 import (
 	"encoding/json"

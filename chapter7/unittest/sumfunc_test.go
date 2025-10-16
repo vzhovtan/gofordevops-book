@@ -2,8 +2,8 @@ package unittest_test
 
 // The file with unit test for the sum function
 import (
-	"github.com/vzhovtan/gofordevops/chapter7/unittest"
 	"testing"
+	"unittest"
 )
 
 // The first test case validates the correct result returned by the function

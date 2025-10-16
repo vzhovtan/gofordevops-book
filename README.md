@@ -1,1 +1,1 @@
-### Code example for "Go for DevOps" book
+### Code examples for "Go for DevOps" book

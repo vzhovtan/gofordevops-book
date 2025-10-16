@@ -1,3 +1,3 @@
-module github.com/vzhovtan/gofordevops/chapter7/tdd
+module tdd
 
 go 1.23.2
