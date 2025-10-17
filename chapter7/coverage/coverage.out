@@ -1,0 +1,4 @@
+mode: set
+coverage/coverage.go:3.24,5.2 1 1
+coverage/coverage.go:7.24,9.2 1 1
+coverage/coverage.go:11.24,13.2 1 1
