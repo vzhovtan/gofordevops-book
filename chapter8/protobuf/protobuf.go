@@ -1,14 +1,13 @@
-package main
+package protobuf
 
 import (
 	"fmt"
-	"log"
-
-	"example/pb"
 	"google.golang.org/protobuf/proto"
+	"log"
+	"protobuf/example/pb"
 )
 
-func main() {
+func PersonMarshalUnmarshal() {
 	// Create a Person
 	person := &pb.Person{
 		Name:  "Alice",
