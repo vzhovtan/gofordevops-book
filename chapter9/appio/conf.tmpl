@@ -1,0 +1,211 @@
+hostname {{ .Base.Device_id }}
+cli alias name wr copy running-config startup-config
+system vlan long-name
+vdc {{ .Base.Device_id }} id 1
+limit-resource vlan minimum 16 maximum 4094
+limit-resource vrf minimum 2 maximum 4096
+limit-resource port-channel minimum 0 maximum 511
+limit-resource m4route-mem minimum 58 maximum 58
+limit-resource m6route-mem minimum 8 maximum 8
+
+feature bash-shell
+feature scp-server
+feature tacacs+
+cfs eth distribute
+nv overlay evpn
+feature bgp
+feature isis
+feature pbr
+feature interface-vlan
+feature vn-segment-vlan-based
+feature lacp
+feature dhcp
+feature lldp
+feature bfd
+feature nv overlay
+feature ngoam
+
+clock timezone PST -8 0
+clock summer-time PDT 2 Sun Mar 02:00 1 Sun Nov 02:00 60
+
+archive
+path bootflash:startup-config
+time-period 0
+maximum 14
+
+ngoam install acl
+
+ip domain-lookup
+ip domain-name net.google.com
+{{if .Base.Management_ipv6 }}ip name-server 2001:AAAA:BBBB::8888 2001:AAAA:BBBB::8844
+{{else}}
+{{if .Base.Management_ip }}ip name-server 192.168.1.1
+{{end}}
+{{end}}
+
+system default switchport
+system jumbomtu 9000
+ip ping source-interface loopback0
+ip traceroute source-interface loopback0
+ip dns source-interface loopback0
+ip ssh source-interface loopback0
+
+rmon event 1 description FATAL(1) owner PMON@FATAL
+rmon event 2 description CRITICAL(2) owner PMON@CRITICAL
+rmon event 3 description ERROR(3) owner PMON@ERROR
+rmon event 4 description WARNING(4) owner PMON@WARNING
+rmon event 5 description INFORMATION(5) owner PMON@INFO
+snmp-server context default vrf default
+snmp-server counter cache timeout 10
+snmp-server packetsize 1400
+snmp-server globalEnforcePriv
+snmp-server user netops network-operator auth sha {{ .Base.Snmp_community }} priv aes-128 {{ .Base.Snmp_community }}
+
+{{if .Base.Management_ipv6 }}
+ntp server AAAA:BBBB:CCCC::1 use-vrf default
+ntp server 2001:AAAA:BBBB::4 use-vrf default
+ntp server 2001:BBBB:CCCC::8 use-vrf default
+ntp server 2001:CCCC:DDDD::C use-vrf default
+{{else}}
+{{if .Base.Management_ip }}
+ntp server 192.168.101.1 use-vrf default
+ntp server 192.168.101.2 use-vrf default
+ntp server 192.168.101.3 use-vrf default
+{{end}}
+{{end}}
+ntp source-interface loopback0
+
+fabric forwarding anycast-gateway-mac 0000.5100.5300
+ip igmp snooping vxlan
+system vlan nve-overlay id 1100-1999
+
+username admin password 0 {{ .Base.Network_password }} role network-admin
+username netops password 0 {{ .Base.Network_password }} role network-admin
+
+tacacs-server key 0 {{ .Base.Tacacs_key }}
+ip tacacs source-interface loopback0
+tacacs-server timeout 4
+{{if .Base.Management_ipv6 }}
+tacacs-server host AAAA:BBBB:CCCC::1 port 2832
+tacacs-server host AAAA:BBBB:CCCC::2 port 2832
+tacacs-server host AAAA:BBBB:CCCC::3 port 2832
+aaa group server tacacs+ TacServer
+  server AAAA:BBBB:CCCC::1
+  server AAAA:BBBB:CCCC::2
+  server AAAA:BBBB:CCCC::3
+{{else}}
+{{if .Base.Management_ip }}
+tacacs-server host 192.168.101.1 port 2832
+tacacs-server host 192.168.101.2 port 2832
+tacacs-server host 192.168.101.3 port 2832
+aaa group server tacacs+ TacServer
+  server 192.168.101.1
+  server 192.168.101.2
+  server 192.168.101.3
+{{end}}
+{{end}}
+  source-interface loopback0
+
+aaa authentication login default group TacServer local
+aaa authentication login console local
+aaa authorization config-commands default group TacServer local
+{{if not .Base.Bootstrap }}
+aaa authorization commands default group TacServer
+{{end}}
+aaa accounting default group TacServer
+aaa authentication login invalid-username-log
+aaa authentication login error-enable
+
+route-map RM-PERMIT permit 10
+route-map RM-REDIST-DIRECT permit 10
+  set community 65203:5 additive
+route-map RM-REDIST-STATIC permit 10
+  set community 65203:5 additive
+
+service dhcp
+ip dhcp relay
+ipv6 dhcp relay
+
+vrf context management
+system nve peer-vni-counter
+
+{{range .Ports}}
+{{if (eq .Int_type "uplink")}}
+interface Ethernet{{.Int_id}}
+description {{.Int_desc}}
+no switchport
+mtu 9216
+no ip redirects
+{{if .Rfc_address}}ip address {{.Rfc_address}}{{end}}
+{{if.Ipv6_rfc_address}}ipv6 address {{.Ipv6_rfc_address}}{{end}}
+no ipv6 redirects
+isis network point-to-point
+ip router isis underlay
+ipv6 router isis underlay
+no isis passive-interface level-2
+no shutdown
+{{end}}
+{{end}}
+
+interface nve1
+description NVE
+no shutdown
+host-reachability protocol bgp
+source-interface loopback2
+global ingress-replication protocol bgp
+
+interface loopback0
+description management
+{{if .Base.Management_ip}}ip address {{.Base.Management_ip}}
+ip router isis underlay
+{{end}}
+{{if .Base.Management_ipv6}}ipv6 address {{.Base.Management_ipv6}}
+ipv6 router isis underlay
+{{end}}
+
+interface loopback1
+description IGP/BGP
+ip address {{.Base.Mgmt_lo1_id}}
+ip router isis underlay
+
+interface loopback2
+description VTEP
+ip address {{.Base.Mgmt_lo2_id}}
+ip router isis underlay
+
+interface loopback3
+description MCAST
+ip address {{.Base.Mgmt_lo3_id}}
+ip router isis underlay
+
+line console
+  exec-timeout 180
+line vty
+
+router isis underlay
+  net {{.Base.Mgmt_iso_id }}
+  is-type level-2
+  address-family ipv4 unicast
+    bfd
+  address-family ipv6 unicast
+    bfd
+    multi-topology
+  passive-interface default level-1-2
+
+router bgp {{.Base.Asn_id}}
+router-id {{.Base.Rd_id }}
+log-neighbor-changes
+  address-family l2vpn evpn
+    maximum-paths ibgp 8
+  template peer FABRIC-SPINE
+    bfd
+    remote-as {{.Base.Asn_id }}
+    update-source loopback1
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+{{range .Interfaces}}
+  neighbor {{.Neighbor_id}}
+    description {{.Neighbor_desc}}
+    inherit peer FABRIC-SPINE
+{{end}}
