@@ -17,7 +17,9 @@ jobs:
           go-version: 1.23
 
       - name: Verify dependencies
+        working-directory: ./chapter9/workflow
         run: go mod verify
 
       - name: Run tests
-        run: go test -v ./...
+        working-directory: ./chapter9/workflow
+        run: go test -v .
