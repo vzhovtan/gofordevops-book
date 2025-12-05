@@ -1,0 +1,84 @@
+{
+  "infrastructure_devices": [
+    {
+      "hostname": "router-main",
+      "ipv4_address": "192.168.1.1"
+    },
+    {
+      "hostname": "switch-core-01",
+      "ipv4_address": "192.168.1.2"
+    },
+    {
+      "hostname": "switch-floor2",
+      "ipv4_address": "192.168.1.3"
+    },
+    {
+      "hostname": "firewall-01",
+      "ipv4_address": "192.168.1.4"
+    },
+    {
+      "hostname": "ap-lobby",
+      "ipv4_address": "192.168.1.10"
+    },
+    {
+      "hostname": "ap-conference",
+      "ipv4_address": "192.168.1.11"
+    },
+    {
+      "hostname": "ap-warehouse",
+      "ipv4_address": "192.168.1.12"
+    },
+    {
+      "hostname": "printer-office",
+      "ipv4_address": "192.168.1.20"
+    },
+    {
+      "hostname": "printer-lab",
+      "ipv4_address": "192.168.1.21"
+    },
+    {
+      "hostname": "nas-storage",
+      "ipv4_address": "192.168.1.30"
+    },
+    {
+      "hostname": "server-web",
+      "ipv4_address": "192.168.1.50"
+    },
+    {
+      "hostname": "server-db",
+      "ipv4_address": "192.168.1.51"
+    },
+    {
+      "hostname": "server-mail",
+      "ipv4_address": "192.168.1.52"
+    },
+    {
+      "hostname": "camera-entrance",
+      "ipv4_address": "192.168.1.100"
+    },
+    {
+      "hostname": "camera-parking",
+      "ipv4_address": "192.168.1.101"
+    },
+    {
+      "hostname": "camera-backyard",
+      "ipv4_address": "192.168.1.102"
+    },
+    {
+      "hostname": "voip-phone-01",
+      "ipv4_address": "192.168.1.150"
+    },
+    {
+      "hostname": "voip-phone-02",
+      "ipv4_address": "192.168.1.151"
+    },
+    {
+      "hostname": "iot-thermostat",
+      "ipv4_address": "192.168.1.200"
+    },
+    {
+      "hostname": "backup-server",
+      "ipv4_address": "192.168.1.250"
+    }
+  ]
+}
