@@ -230,19 +230,3 @@ func TestScannedDeviceStruct(t *testing.T) {
 		t.Errorf("Expected IsAlive to be true")
 	}
 }
-
-// TestScanNetwork tests the full network scanning (integration test)
-//func TestScanNetwork(t *testing.T) {
-//	// Use a small range for testing
-//	cidr := "127.0.0.1/32"
-//	workers := 5
-//	timeout := 100 * time.Millisecond
-//
-//	devices := scanNetwork(cidr, workers, timeout)
-//
-//	if devices == nil {
-//		t.Error("Expected non-nil device list")
-//	}
-//
-//	t.Logf("Found %d devices in range %s", len(devices), cidr)
-//}

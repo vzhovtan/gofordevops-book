@@ -23,3 +23,11 @@ jobs:
       - name: Run tests
         working-directory: ./chapter10/discovery
         run: go test -v .
+
+      - name: Verify dependencies
+        working-directory: ./chapter10/securecom
+        run: go mod verify
+
+      - name: Run tests
+        working-directory: ./chapter10/securecom
+        run: go test -v .
