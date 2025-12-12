@@ -84,22 +84,3 @@ func SaveDeviceMap(filename string, devices map[string]NetworkDevice) error {
 	fmt.Printf("Device map saved to: %s\n", filename)
 	return nil
 }
-
-// CreateBackup creates a timestamped backup of a JSON file
-func CreateBackup(filename string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("error reading file: %v", err)
-	}
-
-	timestamp := time.Now().Format("20060102_150405")
-	backupName := fmt.Sprintf("%s.%s.backup", filename, timestamp)
-
-	err = os.WriteFile(backupName, data, 0644)
-	if err != nil {
-		return fmt.Errorf("error creating backup: %v", err)
-	}
-
-	fmt.Printf("Backup created: %s\n", backupName)
-	return nil
-}

@@ -310,68 +310,6 @@ func TestSaveDeviceMap(t *testing.T) {
 	}
 }
 
-// TestCreateBackup tests backup creation
-func TestCreateBackup(t *testing.T) {
-	// Create the original file
-	tmpfile, err := os.CreateTemp("", "test_backup_*.json")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	originalName := tmpfile.Name()
-	defer os.Remove(originalName)
-
-	testData := []byte(`{"hostname":"test","ip":"1.2.3.4"}`)
-	_, err = tmpfile.Write(testData)
-	if err != nil {
-		t.Fatalf("Failed to write test data: %v", err)
-	}
-	tmpfile.Close()
-
-	// Create backup
-	err = CreateBackup(originalName)
-	if err != nil {
-		t.Fatalf("Failed to create backup: %v", err)
-	}
-
-	// Find the backup file (it has timestamp)
-	dir := os.TempDir()
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("Failed to read temp dir: %v", err)
-	}
-
-	backupFound := false
-	for _, file := range files {
-		if len(file.Name()) > len(originalName) &&
-			file.Name()[:len(originalName)] == originalName[len(dir)+1:] {
-			backupFound = true
-			defer os.Remove(dir + "/" + file.Name())
-
-			// Verify backup content
-			backupData, err := os.ReadFile(dir + "/" + file.Name())
-			if err != nil {
-				t.Fatalf("Failed to read backup: %v", err)
-			}
-
-			if string(backupData) != string(testData) {
-				t.Error("Backup content doesn't match original")
-			}
-		}
-	}
-
-	if !backupFound {
-		t.Error("Backup file was not created")
-	}
-}
-
-// TestCreateBackup_NonExistentFile tests backup error handling
-func TestCreateBackup_NonExistentFile(t *testing.T) {
-	err := CreateBackup("/non/existent/file.json")
-	if err == nil {
-		t.Error("Expected error for non-existent file, got nil")
-	}
-}
-
 // TestJSONMarshaling tests JSON marshaling of structs
 func TestJSONMarshaling(t *testing.T) {
 	device := NetworkDevice{
