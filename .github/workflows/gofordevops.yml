@@ -33,9 +33,10 @@ jobs:
         run: go test -v .
 
       - name: Verify dependencies
-        working-directory: ./chapter10/extraction
+        working-directory: ./chapter10/storage
         run: go mod verify
 
       - name: Run tests
-        working-directory: ./chapter10/extraction
-        run: go test -v .  
+        working-directory: ./chapter10/storage
+        run: go test -v .
+
