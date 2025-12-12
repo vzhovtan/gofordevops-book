@@ -212,7 +212,7 @@ func retrieveInventoryFromAPI(device Device, apiPath string, timeout time.Durati
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAall(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
@@ -354,14 +354,11 @@ func validateConfiguration(cidr, apiPath, outputDir string) error {
 
 // printSummary displays collection summary
 func printSummary(devices []Device, startTime time.Time) {
-	fmt.Println("\n" + "="*70)
 	fmt.Println("Collection Summary")
-	fmt.Println("=" * 70)
 	fmt.Printf("Total devices discovered: %d\n", len(devices))
 	fmt.Printf("HTTP endpoints:           %d\n", countByPort(devices, 80))
 	fmt.Printf("HTTPS endpoints:          %d\n", countByPort(devices, 443))
 	fmt.Printf("Total time elapsed:       %v\n", time.Since(startTime))
-	fmt.Println("=" * 70)
 }
 
 // countByPort counts devices by port number
