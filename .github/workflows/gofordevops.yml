@@ -40,3 +40,10 @@ jobs:
         working-directory: ./chapter10/storage
         run: go test -v .
 
+      - name: Verify dependencies
+        working-directory: ./chapter10/crawler
+        run: go mod verify
+
+      - name: Run tests
+        working-directory: ./chapter10/crawler
+        run: go test -v .
