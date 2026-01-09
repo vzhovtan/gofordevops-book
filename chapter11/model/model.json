@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created_at": "2026-01-02T10:30:00Z",
+    "updated_at": "2026-01-02T10:30:00Z",
+    "description": "Network infrastructure configuration model",
+    "environment": "production"
+  },
+  "devices": [
+    {
+      "id": "rtr-core-01",
+      "hostname": "core-router-01.example.com",
+      "device_type": "router",
+      "vendor": "cisco",
+      "model": "ASR9000",
+      "management_ip": "10.0.1.10",
+      "location": {
+        "datacenter": "dc-east-01",
+        "rack": "R15",
+        "position": "U24"
+      },
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/0/0",
+          "description": "Uplink to core switch",
+          "ip_address": "192.168.10.1",
+          "subnet_mask": "255.255.255.252",
+          "enabled": true,
+          "mtu": 9000,
+          "speed": "1000",
+          "duplex": "full"
+        },
+        {
+          "name": "GigabitEthernet0/0/1",
+          "description": "Connection to rtr-core-02",
+          "ip_address": "192.168.10.5",
+          "subnet_mask": "255.255.255.252",
+          "enabled": true,
+          "mtu": 9000,
+          "speed": "1000",
+          "duplex": "full"
+        }
+      ],
+      "routing": {
+        "protocols": [
+          {
+            "protocol": "ospf",
+            "process_id": "100",
+            "router_id": "1.1.1.1",
+            "areas": [
+              {
+                "area_id": "0.0.0.0",
+                "networks": [
+                  "192.168.10.0/30",
+                  "192.168.10.4/30"
+                ]
+              }
+            ]
+          },
+          {
+            "protocol": "bgp",
+            "as_number": "65001",
+            "router_id": "1.1.1.1",
+            "neighbors": [
+              {
+                "ip": "192.168.10.6",
+                "remote_as": "65002",
+                "description": "Peer to rtr-core-02"
+              }
+            ]
+          }
+        ],
+        "static_routes": [
+          {
+            "destination": "0.0.0.0/0",
+            "next_hop": "192.168.10.2",
+            "administrative_distance": 1
+          }
+        ]
+      },
+      "services": {
+        "ntp": {
+          "enabled": true,
+          "servers": [
+            "10.0.0.1",
+            "10.0.0.2"
+          ]
+        },
+        "snmp": {
+          "enabled": true,
+          "community": "public",
+          "location": "Datacenter East",
+          "contact": "netops@example.com"
+        },
+        "syslog": {
+          "enabled": true,
+          "servers": [
+            {
+              "host": "10.0.2.10",
+              "port": 514,
+              "severity": "informational"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sw-access-01",
+      "hostname": "access-switch-01.example.com",
+      "device_type": "switch",
+      "vendor": "juniper",
+      "model": "EX4300",
+      "management_ip": "10.0.1.20",
+      "location": {
+        "datacenter": "dc-east-01",
+        "rack": "R16",
+        "position": "U10"
+      },
+      "interfaces": [
+        {
+          "name": "ge-0/0/0",
+          "description": "Access port for server-01",
+          "enabled": true,
+          "switchport_mode": "access",
+          "vlan": 100,
+          "speed": "1000",
+          "duplex": "full"
+        },
+        {
+          "name": "ge-0/0/1",
+          "description": "Access port for server-02",
+          "enabled": true,
+          "switchport_mode": "access",
+          "vlan": 100,
+          "speed": "1000",
+          "duplex": "full"
+        },
+        {
+          "name": "ge-0/0/47",
+          "description": "Trunk to core router",
+          "enabled": true,
+          "switchport_mode": "trunk",
+          "allowed_vlans": [100, 200, 300],
+          "speed": "1000",
+          "duplex": "full"
+        }
+      ],
+      "vlans": [
+        {
+          "id": 100,
+          "name": "production",
+          "description": "Production servers VLAN"
+        },
+        {
+          "id": 200,
+          "name": "management",
+          "description": "Management VLAN"
+        },
+        {
+          "id": 300,
+          "name": "storage",
+          "description": "Storage network VLAN"
+        }
+      ],
+      "services": {
+        "ntp": {
+          "enabled": true,
+          "servers": [
+            "10.0.0.1",
+            "10.0.0.2"
+          ]
+        },
+        "snmp": {
+          "enabled": true,
+          "community": "public",
+          "location": "Datacenter East",
+          "contact": "netops@example.com"
+        }
+      }
+    }
+  ],
+  "security": {
+    "access_lists": [
+      {
+        "name": "MGMT-ACCESS",
+        "entries": [
+          {
+            "sequence": 10,
+            "action": "permit",
+            "protocol": "tcp",
+            "source": "10.0.0.0/8",
+            "destination": "any",
+            "destination_port": 22
+          },
+          {
+            "sequence": 20,
+            "action": "deny",
+            "protocol": "ip",
+            "source": "any",
+            "destination": "any"
+          }
+        ]
+      }
+    ]
+  }
+}

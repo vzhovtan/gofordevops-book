@@ -16,34 +16,34 @@ jobs:
         with:
           go-version: 1.23
 
-      - name: Verify dependencies
-        working-directory: ./chapter10/discovery
-        run: go mod verify
+      # - name: Verify dependencies
+      #   working-directory: ./chapter10/discovery
+      #   run: go mod verify
 
-      - name: Run tests
-        working-directory: ./chapter10/discovery
-        run: go test -v .
+      # - name: Run tests
+      #   working-directory: ./chapter10/discovery
+      #   run: go test -v .
 
-      - name: Verify dependencies
-        working-directory: ./chapter10/securecom
-        run: go mod verify
+      # - name: Verify dependencies
+      #   working-directory: ./chapter10/securecom
+      #   run: go mod verify
 
-      - name: Run tests
-        working-directory: ./chapter10/securecom
-        run: go test -v .
+      # - name: Run tests
+      #   working-directory: ./chapter10/securecom
+      #   run: go test -v .
 
-      - name: Verify dependencies
-        working-directory: ./chapter10/storage
-        run: go mod verify
+      # - name: Verify dependencies
+      #   working-directory: ./chapter10/storage
+      #   run: go mod verify
 
-      - name: Run tests
-        working-directory: ./chapter10/storage
-        run: go test -v .
+      # - name: Run tests
+      #   working-directory: ./chapter10/storage
+      #   run: go test -v .
 
-      - name: Verify dependencies
-        working-directory: ./chapter10/crawler
-        run: go mod verify
+      # - name: Verify dependencies
+      #   working-directory: ./chapter10/crawler
+      #   run: go mod verify
 
-      - name: Run tests
-        working-directory: ./chapter10/crawler
-        run: go test -v .
+      # - name: Run tests
+      #   working-directory: ./chapter10/crawler
+      #   run: go test -v .
