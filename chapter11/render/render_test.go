@@ -1,6 +1,7 @@
 package render
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -49,8 +50,9 @@ func createTestDevice(vendor string) *Device {
 					RouterID:  "1.1.1.1",
 					Areas: []OSPFArea{
 						{
-							AreaID:   "0.0.0.0",
-							Networks: []string{"192.168.1.0/30", "192.168.1.4/30"},
+							AreaID:     "0.0.0.0",
+							Networks:   []string{"192.168.1.0/30", "192.168.1.4/30"},
+							Interfaces: []string{"GigabitEthernet0/0/0", "GigabitEthernet0/0/1"},
 						},
 					},
 				},
@@ -86,7 +88,7 @@ func createTestDevice(vendor string) *Device {
 			},
 		},
 	}
-	
+
 	if vendor == "juniper" {
 		device.Interfaces[0].Name = "ge-0/0/0"
 		device.Interfaces[1].Name = "ge-0/0/1"
@@ -98,7 +100,7 @@ func createTestDevice(vendor string) *Device {
 			},
 		}
 	}
-	
+
 	return device
 }
 
@@ -117,11 +119,11 @@ func TestNewCiscoGenerator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Cisco generator: %v", err)
 	}
-	
+
 	if gen == nil {
 		t.Error("Expected non-nil generator")
 	}
-	
+
 	if gen.template == nil {
 		t.Error("Expected template to be initialized")
 	}
@@ -132,11 +134,11 @@ func TestNewJuniperGenerator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Juniper generator: %v", err)
 	}
-	
+
 	if gen == nil {
 		t.Error("Expected non-nil generator")
 	}
-	
+
 	if gen.template == nil {
 		t.Error("Expected template to be initialized")
 	}
@@ -147,19 +149,19 @@ func TestCiscoGeneratorBasicConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if config == "" {
 		t.Error("Expected non-empty configuration")
 	}
-	
+
 	if !strings.Contains(config, "hostname test-router-01") {
 		t.Error("Configuration should contain hostname command")
 	}
@@ -170,35 +172,35 @@ func TestCiscoGeneratorInterfaces(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "interface GigabitEthernet0/0/0") {
 		t.Error("Configuration should contain interface definition")
 	}
-	
+
 	if !strings.Contains(config, "ip address 192.168.1.1 255.255.255.252") {
 		t.Error("Configuration should contain IP address")
 	}
-	
+
 	if !strings.Contains(config, "description Test interface") {
 		t.Error("Configuration should contain interface description")
 	}
-	
+
 	if !strings.Contains(config, "mtu 1500") {
 		t.Error("Configuration should contain MTU setting")
 	}
-	
+
 	if !strings.Contains(config, "no shutdown") {
 		t.Error("Configuration should contain no shutdown for enabled interface")
 	}
-	
+
 	if !strings.Contains(config, "shutdown") {
 		t.Error("Configuration should contain shutdown for disabled interface")
 	}
@@ -209,19 +211,19 @@ func TestCiscoGeneratorNTP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "ntp server 10.0.0.1") {
 		t.Error("Configuration should contain first NTP server")
 	}
-	
+
 	if !strings.Contains(config, "ntp server 10.0.0.2") {
 		t.Error("Configuration should contain second NTP server")
 	}
@@ -232,23 +234,23 @@ func TestCiscoGeneratorSNMP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "snmp-server community public") {
 		t.Error("Configuration should contain SNMP community")
 	}
-	
+
 	if !strings.Contains(config, "snmp-server location Test Lab") {
 		t.Error("Configuration should contain SNMP location")
 	}
-	
+
 	if !strings.Contains(config, "snmp-server contact admin@test.com") {
 		t.Error("Configuration should contain SNMP contact")
 	}
@@ -259,19 +261,19 @@ func TestCiscoGeneratorSyslog(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "logging host 10.0.2.1") {
 		t.Error("Configuration should contain syslog host")
 	}
-	
+
 	if !strings.Contains(config, "logging trap informational") {
 		t.Error("Configuration should contain syslog severity")
 	}
@@ -282,19 +284,19 @@ func TestCiscoGeneratorOSPF(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "router ospf 100") {
 		t.Error("Configuration should contain OSPF process")
 	}
-	
+
 	if !strings.Contains(config, "router-id 1.1.1.1") {
 		t.Error("Configuration should contain router ID")
 	}
@@ -305,15 +307,15 @@ func TestCiscoGeneratorStaticRoutes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "ip route 10.0.0.0/8 192.168.1.2 1") {
 		t.Error("Configuration should contain static route")
 	}
@@ -324,19 +326,19 @@ func TestJuniperGeneratorBasicConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("juniper")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if config == "" {
 		t.Error("Expected non-empty configuration")
 	}
-	
+
 	if !strings.Contains(config, "host-name test-router-01") {
 		t.Error("Configuration should contain hostname")
 	}
@@ -347,31 +349,31 @@ func TestJuniperGeneratorInterfaces(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("juniper")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "ge-0/0/0") {
 		t.Error("Configuration should contain interface name")
 	}
-	
+
 	if !strings.Contains(config, "description \"Test interface\"") {
 		t.Error("Configuration should contain interface description")
 	}
-	
+
 	if !strings.Contains(config, "address 192.168.1.1/30") {
 		t.Error("Configuration should contain IP address with CIDR notation")
 	}
-	
+
 	if !strings.Contains(config, "mtu 1500") {
 		t.Error("Configuration should contain MTU setting")
 	}
-	
+
 	if !strings.Contains(config, "disable") {
 		t.Error("Configuration should contain disable for inactive interface")
 	}
@@ -382,23 +384,23 @@ func TestJuniperGeneratorVLANs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("juniper")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "vlans {") {
 		t.Error("Configuration should contain VLAN section")
 	}
-	
+
 	if !strings.Contains(config, "test-vlan") {
 		t.Error("Configuration should contain VLAN name")
 	}
-	
+
 	if !strings.Contains(config, "vlan-id 100") {
 		t.Error("Configuration should contain VLAN ID")
 	}
@@ -409,19 +411,19 @@ func TestJuniperGeneratorNTP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("juniper")
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "ntp {") {
 		t.Error("Configuration should contain NTP section")
 	}
-	
+
 	if !strings.Contains(config, "server 10.0.0.1") {
 		t.Error("Configuration should contain NTP server")
 	}
@@ -438,7 +440,7 @@ func TestGetMaskBits(t *testing.T) {
 		{"255.0.0.0", "8"},
 		{"unknown", "32"},
 	}
-	
+
 	for _, tc := range tests {
 		result := getMaskBits(tc.mask)
 		if result != tc.expected {
@@ -458,7 +460,7 @@ func TestJoinFunction(t *testing.T) {
 		{[]int{}, ",", ""},
 		{[]int{10, 20}, " ", "10 20"},
 	}
-	
+
 	for _, tc := range tests {
 		result := join(tc.arr, tc.sep)
 		if result != tc.expected {
@@ -472,11 +474,11 @@ func TestNewGeneratorFactory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator factory: %v", err)
 	}
-	
+
 	if factory == nil {
 		t.Error("Expected non-nil factory")
 	}
-	
+
 	if len(factory.generators) != 2 {
 		t.Errorf("Expected 2 generators, got %d", len(factory.generators))
 	}
@@ -487,7 +489,7 @@ func TestGeneratorFactoryGetGenerator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create factory: %v", err)
 	}
-	
+
 	ciscoGen, err := factory.GetGenerator("cisco")
 	if err != nil {
 		t.Errorf("Failed to get Cisco generator: %v", err)
@@ -495,7 +497,7 @@ func TestGeneratorFactoryGetGenerator(t *testing.T) {
 	if ciscoGen == nil {
 		t.Error("Expected non-nil Cisco generator")
 	}
-	
+
 	juniperGen, err := factory.GetGenerator("juniper")
 	if err != nil {
 		t.Errorf("Failed to get Juniper generator: %v", err)
@@ -503,7 +505,7 @@ func TestGeneratorFactoryGetGenerator(t *testing.T) {
 	if juniperGen == nil {
 		t.Error("Expected non-nil Juniper generator")
 	}
-	
+
 	_, err = factory.GetGenerator("unknown")
 	if err == nil {
 		t.Error("Expected error for unknown vendor")
@@ -517,18 +519,18 @@ func TestGenerateConfigurationIntegration(t *testing.T) {
 			*createTestDevice("cisco"),
 		},
 	}
-	
+
 	model.Devices[0].ID = "cisco-test-01"
-	
+
 	config, err := GenerateConfiguration(model, "cisco-test-01")
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if config == "" {
 		t.Error("Expected non-empty configuration")
 	}
-	
+
 	if !strings.Contains(config, "hostname test-router-01") {
 		t.Error("Configuration should contain hostname")
 	}
@@ -539,12 +541,12 @@ func TestGenerateConfigurationDeviceNotFound(t *testing.T) {
 		Metadata: *createTestMetadata(),
 		Devices:  []Device{},
 	}
-	
+
 	_, err := GenerateConfiguration(model, "nonexistent")
 	if err == nil {
 		t.Error("Expected error for nonexistent device")
 	}
-	
+
 	if !strings.Contains(err.Error(), "not found") {
 		t.Errorf("Expected 'not found' error, got: %v", err)
 	}
@@ -555,16 +557,16 @@ func TestCiscoGeneratorWithoutRouting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	device.Routing = nil
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if strings.Contains(config, "router ospf") {
 		t.Error("Configuration should not contain OSPF when routing is nil")
 	}
@@ -575,7 +577,7 @@ func TestCiscoGeneratorWithBGP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create generator: %v", err)
 	}
-	
+
 	device := createTestDevice("cisco")
 	device.Routing.Protocols = []RoutingProtocol{
 		{
@@ -592,16 +594,16 @@ func TestCiscoGeneratorWithBGP(t *testing.T) {
 		},
 	}
 	metadata := createTestMetadata()
-	
+
 	config, err := gen.Generate(device, metadata)
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "router bgp 65001") {
 		t.Error("Configuration should contain BGP configuration")
 	}
-	
+
 	if !strings.Contains(config, "neighbor 192.168.1.2 remote-as 65002") {
 		t.Error("Configuration should contain BGP neighbor")
 	}
@@ -614,28 +616,28 @@ func TestLoadModelAndGenerate(t *testing.T) {
 			*createTestDevice("cisco"),
 		},
 	}
-	
+
 	model.Devices[0].ID = "test-device"
-	
+
 	filename := "test_model_generate.json"
 	defer os.Remove(filename)
-	
+
 	data, _ := json.MarshalIndent(model, "", "  ")
 	err := os.WriteFile(filename, data, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
-	
+
 	loadedModel, err := LoadModel(filename)
 	if err != nil {
 		t.Fatalf("Failed to load model: %v", err)
 	}
-	
+
 	config, err := GenerateConfiguration(loadedModel, "test-device")
 	if err != nil {
 		t.Fatalf("Failed to generate configuration: %v", err)
 	}
-	
+
 	if !strings.Contains(config, "hostname test-router-01") {
 		t.Error("Generated configuration should contain hostname")
 	}

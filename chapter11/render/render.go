@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -25,22 +26,23 @@ type Location struct {
 }
 
 type Interface struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	IPAddress      string   `json:"ip_address,omitempty"`
-	SubnetMask     string   `json:"subnet_mask,omitempty"`
-	Enabled        bool     `json:"enabled"`
-	MTU            int      `json:"mtu,omitempty"`
-	Speed          string   `json:"speed"`
-	Duplex         string   `json:"duplex"`
-	SwitchportMode string   `json:"switchport_mode,omitempty"`
-	VLAN           int      `json:"vlan,omitempty"`
-	AllowedVLANs   []int    `json:"allowed_vlans,omitempty"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	IPAddress      string `json:"ip_address,omitempty"`
+	SubnetMask     string `json:"subnet_mask,omitempty"`
+	Enabled        bool   `json:"enabled"`
+	MTU            int    `json:"mtu,omitempty"`
+	Speed          string `json:"speed"`
+	Duplex         string `json:"duplex"`
+	SwitchportMode string `json:"switchport_mode,omitempty"`
+	VLAN           int    `json:"vlan,omitempty"`
+	AllowedVLANs   []int  `json:"allowed_vlans,omitempty"`
 }
 
 type OSPFArea struct {
-	AreaID   string   `json:"area_id"`
-	Networks []string `json:"networks"`
+	AreaID     string   `json:"area_id"`
+	Networks   []string `json:"networks"`
+	Interfaces []string `json:"interfaces"`
 }
 
 type BGPNeighbor struct {
@@ -161,18 +163,18 @@ func NewCiscoGenerator() (*CiscoGenerator, error) {
 		"getMaskBits": getMaskBits,
 		"join":        join,
 	}
-	
-	tmpl, err := template.New("cisco").Funcs(funcMap).Parse(ciscoTemplate)
+
+	tmpl, err := template.New("cisco").Funcs(funcMap).Parse(CiscoTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Cisco template: %w", err)
 	}
-	
+
 	return &CiscoGenerator{template: tmpl}, nil
 }
 
 func (g *CiscoGenerator) Generate(device *Device, metadata *Metadata) (string, error) {
 	var buf bytes.Buffer
-	
+
 	data := struct {
 		*Device
 		Metadata *Metadata
@@ -180,11 +182,11 @@ func (g *CiscoGenerator) Generate(device *Device, metadata *Metadata) (string, e
 		Device:   device,
 		Metadata: metadata,
 	}
-	
+
 	if err := g.template.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("failed to execute Cisco template: %w", err)
 	}
-	
+
 	return buf.String(), nil
 }
 
@@ -197,18 +199,18 @@ func NewJuniperGenerator() (*JuniperGenerator, error) {
 		"getMaskBits": getMaskBits,
 		"join":        join,
 	}
-	
-	tmpl, err := template.New("juniper").Funcs(funcMap).Parse(juniperTemplate)
+
+	tmpl, err := template.New("juniper").Funcs(funcMap).Parse(JuniperTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Juniper template: %w", err)
 	}
-	
+
 	return &JuniperGenerator{template: tmpl}, nil
 }
 
 func (g *JuniperGenerator) Generate(device *Device, metadata *Metadata) (string, error) {
 	var buf bytes.Buffer
-	
+
 	data := struct {
 		*Device
 		Metadata *Metadata
@@ -216,11 +218,11 @@ func (g *JuniperGenerator) Generate(device *Device, metadata *Metadata) (string,
 		Device:   device,
 		Metadata: metadata,
 	}
-	
+
 	if err := g.template.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("failed to execute Juniper template: %w", err)
 	}
-	
+
 	return buf.String(), nil
 }
 
@@ -232,19 +234,19 @@ func NewGeneratorFactory() (*GeneratorFactory, error) {
 	factory := &GeneratorFactory{
 		generators: make(map[string]ConfigGenerator),
 	}
-	
+
 	ciscoGen, err := NewCiscoGenerator()
 	if err != nil {
 		return nil, err
 	}
 	factory.generators["cisco"] = ciscoGen
-	
+
 	juniperGen, err := NewJuniperGenerator()
 	if err != nil {
 		return nil, err
 	}
 	factory.generators["juniper"] = juniperGen
-	
+
 	return factory, nil
 }
 
@@ -261,12 +263,12 @@ func LoadModel(filename string) (*InfrastructureModel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
-	
+
 	var model InfrastructureModel
 	if err := json.Unmarshal(data, &model); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	
+
 	return &model, nil
 }
 
@@ -278,26 +280,26 @@ func GenerateConfiguration(model *InfrastructureModel, deviceID string) (string,
 			break
 		}
 	}
-	
+
 	if targetDevice == nil {
 		return "", fmt.Errorf("device %s not found", deviceID)
 	}
-	
+
 	factory, err := NewGeneratorFactory()
 	if err != nil {
 		return "", fmt.Errorf("failed to create generator factory: %w", err)
 	}
-	
+
 	generator, err := factory.GetGenerator(targetDevice.Vendor)
 	if err != nil {
 		return "", err
 	}
-	
+
 	config, err := generator.Generate(targetDevice, &model.Metadata)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate configuration: %w", err)
 	}
-	
+
 	return config, nil
 }
 
@@ -306,17 +308,17 @@ func main() {
 		fmt.Println("Usage: go run main.go <json-file> [device-id]")
 		os.Exit(1)
 	}
-	
+
 	filename := os.Args[1]
-	
+
 	model, err := LoadModel(filename)
 	if err != nil {
 		fmt.Printf("Error loading model: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("Loaded model with %d devices\n\n", len(model.Devices))
-	
+
 	if len(os.Args) >= 3 {
 		deviceID := os.Args[2]
 		config, err := GenerateConfiguration(model, deviceID)
@@ -329,13 +331,13 @@ func main() {
 		for _, device := range model.Devices {
 			fmt.Printf("Generating configuration for %s (%s %s)\n", device.Hostname, device.Vendor, device.Model)
 			fmt.Println(strings.Repeat("=", 80))
-			
+
 			config, err := GenerateConfiguration(model, device.ID)
 			if err != nil {
 				fmt.Printf("Error: %v\n\n", err)
 				continue
 			}
-			
+
 			fmt.Println(config)
 			fmt.Println()
 		}

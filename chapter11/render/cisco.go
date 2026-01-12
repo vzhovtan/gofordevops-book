@@ -51,8 +51,9 @@ interface {{.Name}}
 router ospf {{.ProcessID}}
  router-id {{.RouterID}}
 {{- range .Areas}}
+{{ $areaid := .AreaID }}
 {{- range .Networks}}
- network {{.}} area {{$.AreaID}}
+ network {{ . }} area {{ $areaid }}
 {{- end}}
 {{- end}}
 !

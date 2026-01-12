@@ -93,8 +93,8 @@ protocols {
     ospf {
         area {{range .Areas}}{{.AreaID}}{{end}} {
 {{- range .Areas}}
-{{- range .Networks}}
-            interface {{$.Interfaces.Name}} {
+{{- range $.Interfaces}}
+            interface {{ .Name }} {
                 interface-type p2p;
             }
 {{- end}}
