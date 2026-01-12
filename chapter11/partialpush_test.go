@@ -1,4 +1,4 @@
-package configpush
+package infra
 
 import (
 	"errors"
