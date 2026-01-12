@@ -1,10 +1,12 @@
-package infra
+package push
 
 import (
 	"errors"
 	"strings"
 	"testing"
 	"time"
+	"model"
+	"render"
 )
 
 type MockDeploymentStrategy struct {
@@ -16,20 +18,20 @@ type MockDeploymentStrategy struct {
 	backupConfig   string
 }
 
-func (m *MockDeploymentStrategy) Deploy(device *Device, config string) error {
+func (m *MockDeploymentStrategy) Deploy(device *model.Device, config string) error {
 	m.deployCalled = true
 	m.deployedConfig = config
 	return m.deployError
 }
 
-func (m *MockDeploymentStrategy) Rollback(device *Device, backupConfig string) error {
+func (m *MockDeploymentStrategy) Rollback(device *model.Device, backupConfig string) error {
 	m.rollbackCalled = true
 	m.backupConfig = backupConfig
 	return m.rollbackError
 }
 
-func createTestDeviceForDeployment(vendor string) *Device {
-	return &Device{
+func createTestDeviceForDeployment(vendor string) *model.Device {
+	return &model.Device{
 		ID:           "test-deploy-01",
 		Hostname:     "test-device",
 		DeviceType:   "router",
@@ -505,7 +507,7 @@ func TestMultipleDeploymentsIndependence(t *testing.T) {
 	
 	deployer := NewConfigDeployer(mockStrategy)
 	
-	devices := []*Device{
+	devices := []*model.Device{
 		createTestDeviceForDeployment("cisco"),
 		createTestDeviceForDeployment("cisco"),
 	}

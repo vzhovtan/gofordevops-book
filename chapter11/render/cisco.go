@@ -1,4 +1,4 @@
-package infra
+package render
 
 const CiscoTemplate = `!
 ! Cisco Configuration Generated from Infrastructure Model

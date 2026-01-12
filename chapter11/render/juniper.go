@@ -1,4 +1,4 @@
-package infra
+package render
 
 const JuniperTemplate = `## Juniper Configuration Generated from Infrastructure Model
 ## Device: {{.Hostname}}

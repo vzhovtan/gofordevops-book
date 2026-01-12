@@ -1,4 +1,4 @@
-package infra
+package push
 
 import (
 	"fmt"
@@ -6,13 +6,14 @@ import (
 	"log"
 	"strings"
 	"time"
+	"model"
 
 	"golang.org/x/crypto/ssh"
 )
 
 type DeploymentStrategy interface {
-	Deploy(device *Device, config string) error
-	Rollback(device *Device, backupConfig string) error
+	Deploy(device *model.Device, config string) error
+	Rollback(device *model.Device, backupConfig string) error
 }
 
 type ConfigBackup struct {
@@ -145,7 +146,7 @@ func (s *FullReplaceStrategy) deployCisco(client *ssh.Client, config string) err
 	return nil
 }
 
-func (s *FullReplaceStrategy) Deploy(device *Device, config string) error {
+func (s *FullReplaceStrategy) Deploy(device *model.Device, config string) error {
 	if device.Vendor != "cisco" {
 		return fmt.Errorf("full replacement only supported for Cisco devices")
 	}
@@ -185,7 +186,7 @@ func (s *FullReplaceStrategy) Deploy(device *Device, config string) error {
 	return nil
 }
 
-func (s *FullReplaceStrategy) Rollback(device *Device, backupConfig string) error {
+func (s *FullReplaceStrategy) Rollback(device *model.Device, backupConfig string) error {
 	client, err := s.connectSSH(device)
 	if err != nil {
 		return err
@@ -202,7 +203,7 @@ func (s *FullReplaceStrategy) Rollback(device *Device, backupConfig string) erro
 	return nil
 }
 
-func (s *FullReplaceStrategy) verifyConfiguration(device *Device, expectedConfig string) error {
+func (s *FullReplaceStrategy) verifyConfiguration(device *model.Device, expectedConfig string) error {
 	time.Sleep(2 * time.Second)
 
 	client, err := s.connectSSH(device)
@@ -299,7 +300,7 @@ func NewConfigDeployer(strategy DeploymentStrategy) *ConfigDeployer {
 	}
 }
 
-func (d *ConfigDeployer) DeployToDevice(device *Device, config string) *DeploymentResult {
+func (d *ConfigDeployer) DeployToDevice(device *.model.Device, config string) *DeploymentResult {
 	startTime := time.Now()
 	result := &DeploymentResult{
 		DeviceID:  device.ID,
@@ -323,7 +324,7 @@ func (d *ConfigDeployer) DeployToDevice(device *Device, config string) *Deployme
 	return result
 }
 
-func (d *ConfigDeployer) DeployToMultipleDevices(devices []*Device, configs map[string]string) []*DeploymentResult {
+func (d *ConfigDeployer) DeployToMultipleDevices(devices []*model.Device, configs map[string]string) []*DeploymentResult {
 	results := make([]*DeploymentResult, 0, len(devices))
 
 	for _, device := range devices {
@@ -343,34 +344,4 @@ func (d *ConfigDeployer) DeployToMultipleDevices(devices []*Device, configs map[
 	}
 
 	return results
-}
-
-func main() {
-	model, err := LoadModel("infrastructure.json")
-	if err != nil {
-		log.Fatalf("Failed to load model: %v", err)
-	}
-
-	device := &model.Devices[0]
-	if device.Vendor != "cisco" {
-		log.Fatalf("This example requires a Cisco device")
-	}
-
-	config, err := GenerateConfiguration(model, device.ID)
-	if err != nil {
-		log.Fatalf("Failed to generate configuration: %v", err)
-	}
-
-	strategy := NewFullReplaceStrategy("admin", "password", 30*time.Second)
-	deployer := NewConfigDeployer(strategy)
-
-	result := deployer.DeployToDevice(device, config)
-
-	if result.Success {
-		fmt.Printf("Deployment successful!\n")
-		fmt.Printf("Device: %s\n", result.DeviceID)
-		fmt.Printf("Duration: %v\n", result.Duration)
-	} else {
-		fmt.Printf("Deployment failed: %v\n", result.Error)
-	}
 }

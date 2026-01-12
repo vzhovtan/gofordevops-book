@@ -1,14 +1,16 @@
-package infra
+package push
 
 import (
 	"errors"
 	"strings"
 	"testing"
 	"time"
+	"model"
+	"render"
 )
 
-func createJuniperTestDevice() *Device {
-	return &Device{
+func createJuniperTestDevice() *model.Device {
+	return &model.Device{
 		ID:           "juniper-test-01",
 		Hostname:     "test-juniper-switch",
 		DeviceType:   "switch",

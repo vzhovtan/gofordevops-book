@@ -1,10 +1,12 @@
-package infra
+package push
 
 import (
 	"fmt"
 	"log"
 	"strings"
 	"time"
+	"model"
+	"render"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -38,7 +40,7 @@ func NewPerElementStrategy(username, password string, timeout time.Duration) *Pe
 	}
 }
 
-func (s *PerElementStrategy) connectSSH(device *Device) (*ssh.Client, error) {
+func (s *PerElementStrategy) connectSSH(device *model.Device) (*ssh.Client, error) {
 	addr := fmt.Sprintf("%s:22", device.ManagementIP)
 	client, err := ssh.Dial("tcp", addr, s.sshConfig)
 	if err != nil {
@@ -105,7 +107,7 @@ func (s *PerElementStrategy) buildJuniperCommands(elements []ConfigElement) []st
 	return commands
 }
 
-func (s *PerElementStrategy) Deploy(device *Device, config string) error {
+func (s *PerElementStrategy) Deploy(device *model.Device, config string) error {
 	if device.Vendor != "juniper" {
 		return fmt.Errorf("per-element update only supported for Juniper devices")
 	}
@@ -158,7 +160,7 @@ func (s *PerElementStrategy) Deploy(device *Device, config string) error {
 	return nil
 }
 
-func (s *PerElementStrategy) parseConfigToElements(config string, device *Device) ([]ConfigElement, error) {
+func (s *PerElementStrategy) parseConfigToElements(config string, device *model.Device) ([]ConfigElement, error) {
 	elements := []ConfigElement{}
 
 	for _, iface := range device.Interfaces {
@@ -173,7 +175,7 @@ func (s *PerElementStrategy) parseConfigToElements(config string, device *Device
 		}
 
 		if iface.IPAddress != "" {
-			cidrBits := getMaskBits(iface.SubnetMask)
+			cidrBits := render.getMaskBits(iface.SubnetMask)
 			elements = append(elements, ConfigElement{
 				Type:        "interface",
 				Path:        fmt.Sprintf("interfaces %s unit 0 family inet", iface.Name),
@@ -363,7 +365,7 @@ func (s *PerElementStrategy) rollbackToSnapshot(client *ssh.Client, snapshotID s
 	return nil
 }
 
-func (s *PerElementStrategy) Rollback(device *Device, backupConfig string) error {
+func (s *PerElementStrategy) Rollback(device *model.Device, backupConfig string) error {
 	client, err := s.connectSSH(device)
 	if err != nil {
 		return err
@@ -391,7 +393,7 @@ func NewPerElementDeployer(strategy *PerElementStrategy) *PerElementDeployer {
 	}
 }
 
-func (d *PerElementDeployer) DeployElements(device *Device, elements []ConfigElement) ([]ElementUpdateResult, error) {
+func (d *PerElementDeployer) DeployElements(device *model.Device, elements []ConfigElement) ([]ElementUpdateResult, error) {
 	results := make([]ElementUpdateResult, 0, len(elements))
 
 	client, err := d.strategy.connectSSH(device)
@@ -444,7 +446,7 @@ func (d *PerElementDeployer) DeployElements(device *Device, elements []ConfigEle
 	return results, nil
 }
 
-func (d *PerElementDeployer) UpdateInterface(device *Device, interfaceName string, updates map[string]interface{}) error {
+func (d *PerElementDeployer) UpdateInterface(device *model.Device, interfaceName string, updates map[string]interface{}) error {
 	elements := []ConfigElement{}
 
 	if desc, ok := updates["description"].(string); ok {
@@ -493,38 +495,4 @@ func (d *PerElementDeployer) UpdateInterface(device *Device, interfaceName strin
 
 	_, err := d.DeployElements(device, elements)
 	return err
-}
-
-func main() {
-	model, err := LoadModel("infrastructure.json")
-	if err != nil {
-		log.Fatalf("Failed to load model: %v", err)
-	}
-
-	var juniperDevice *Device
-	for i := range model.Devices {
-		if model.Devices[i].Vendor == "juniper" {
-			juniperDevice = &model.Devices[i]
-			break
-		}
-	}
-
-	if juniperDevice == nil {
-		log.Fatalf("No Juniper device found in model")
-	}
-
-	strategy := NewPerElementStrategy("admin", "password", 30*time.Second)
-	deployer := NewPerElementDeployer(strategy)
-
-	updates := map[string]interface{}{
-		"description": "Updated via per-element strategy",
-		"mtu":         9000,
-	}
-
-	err = deployer.UpdateInterface(juniperDevice, "ge-0/0/0", updates)
-	if err != nil {
-		log.Fatalf("Failed to update interface: %v", err)
-	}
-
-	fmt.Println("Interface updated successfully")
 }

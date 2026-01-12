@@ -1,4 +1,4 @@
-package configpush
+package model
 
 import (
 	"encoding/json"

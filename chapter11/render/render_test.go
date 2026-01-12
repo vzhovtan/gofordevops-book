@@ -1,4 +1,4 @@
-package infra
+package render
 
 import (
 	"encoding/json"
