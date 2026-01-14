@@ -2,11 +2,10 @@ package push
 
 import (
 	"errors"
+	"model"
 	"strings"
 	"testing"
 	"time"
-	"model"
-	"render"
 )
 
 type MockDeploymentStrategy struct {
@@ -38,7 +37,7 @@ func createTestDeviceForDeployment(vendor string) *model.Device {
 		Vendor:       vendor,
 		Model:        "TestModel",
 		ManagementIP: "192.168.1.1",
-		Location: Location{
+		Location: model.Location{
 			Datacenter: "dc-test",
 			Rack:       "R01",
 			Position:   "U10",
@@ -48,19 +47,19 @@ func createTestDeviceForDeployment(vendor string) *model.Device {
 
 func TestNewFullReplaceStrategy(t *testing.T) {
 	strategy := NewFullReplaceStrategy("admin", "password", 30*time.Second)
-	
+
 	if strategy == nil {
 		t.Fatal("Expected non-nil strategy")
 	}
-	
+
 	if strategy.sshConfig == nil {
 		t.Error("Expected SSH config to be initialized")
 	}
-	
+
 	if strategy.sshConfig.User != "admin" {
 		t.Errorf("Expected user 'admin', got %s", strategy.sshConfig.User)
 	}
-	
+
 	if strategy.timeout != 30*time.Second {
 		t.Errorf("Expected timeout 30s, got %v", strategy.timeout)
 	}
@@ -69,11 +68,11 @@ func TestNewFullReplaceStrategy(t *testing.T) {
 func TestNewConfigDeployer(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{}
 	deployer := NewConfigDeployer(mockStrategy)
-	
+
 	if deployer == nil {
 		t.Fatal("Expected non-nil deployer")
 	}
-	
+
 	if deployer.strategy == nil {
 		t.Error("Expected strategy to be set")
 	}
@@ -84,32 +83,32 @@ func TestDeployToDeviceSuccess(t *testing.T) {
 		deployError: nil,
 	}
 	deployer := NewConfigDeployer(mockStrategy)
-	
+
 	device := createTestDeviceForDeployment("cisco")
 	config := "hostname test-device\n"
-	
+
 	result := deployer.DeployToDevice(device, config)
-	
+
 	if result == nil {
 		t.Fatal("Expected non-nil result")
 	}
-	
+
 	if !result.Success {
 		t.Error("Expected successful deployment")
 	}
-	
+
 	if result.Error != nil {
 		t.Errorf("Expected no error, got: %v", result.Error)
 	}
-	
+
 	if result.DeviceID != device.ID {
 		t.Errorf("Expected device ID %s, got %s", device.ID, result.DeviceID)
 	}
-	
+
 	if !mockStrategy.deployCalled {
 		t.Error("Expected Deploy to be called")
 	}
-	
+
 	if mockStrategy.deployedConfig != config {
 		t.Errorf("Expected config %s, got %s", config, mockStrategy.deployedConfig)
 	}
@@ -121,20 +120,20 @@ func TestDeployToDeviceFailure(t *testing.T) {
 		deployError: expectedError,
 	}
 	deployer := NewConfigDeployer(mockStrategy)
-	
+
 	device := createTestDeviceForDeployment("cisco")
 	config := "hostname test-device\n"
-	
+
 	result := deployer.DeployToDevice(device, config)
-	
+
 	if result.Success {
 		t.Error("Expected failed deployment")
 	}
-	
+
 	if result.Error == nil {
 		t.Error("Expected error to be set")
 	}
-	
+
 	if !mockStrategy.deployCalled {
 		t.Error("Expected Deploy to be called")
 	}
@@ -143,22 +142,22 @@ func TestDeployToDeviceFailure(t *testing.T) {
 func TestDeployToDeviceTimestamp(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{}
 	deployer := NewConfigDeployer(mockStrategy)
-	
+
 	device := createTestDeviceForDeployment("cisco")
 	config := "hostname test-device\n"
-	
+
 	beforeDeploy := time.Now()
 	result := deployer.DeployToDevice(device, config)
 	afterDeploy := time.Now()
-	
+
 	if result.Timestamp.Before(beforeDeploy) {
 		t.Error("Timestamp should be after deployment started")
 	}
-	
+
 	if result.Timestamp.After(afterDeploy) {
 		t.Error("Timestamp should be before deployment completed")
 	}
-	
+
 	if result.Duration <= 0 {
 		t.Error("Duration should be positive")
 	}
@@ -167,25 +166,25 @@ func TestDeployToDeviceTimestamp(t *testing.T) {
 func TestDeployToMultipleDevicesSuccess(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{}
 	deployer := NewConfigDeployer(mockStrategy)
-	
-	devices := []*Device{
+
+	devices := []*model.Device{
 		createTestDeviceForDeployment("cisco"),
 		createTestDeviceForDeployment("cisco"),
 	}
 	devices[0].ID = "device-01"
 	devices[1].ID = "device-02"
-	
+
 	configs := map[string]string{
 		"device-01": "hostname device-01\n",
 		"device-02": "hostname device-02\n",
 	}
-	
+
 	results := deployer.DeployToMultipleDevices(devices, configs)
-	
+
 	if len(results) != 2 {
 		t.Errorf("Expected 2 results, got %d", len(results))
 	}
-	
+
 	for _, result := range results {
 		if !result.Success {
 			t.Errorf("Expected success for device %s", result.DeviceID)
@@ -198,8 +197,8 @@ func TestDeployToMultipleDevicesStopsOnFailure(t *testing.T) {
 		deployError: errors.New("deployment failed"),
 	}
 	deployer := NewConfigDeployer(mockStrategy)
-	
-	devices := []*Device{
+
+	devices := []*model.Device{
 		createTestDeviceForDeployment("cisco"),
 		createTestDeviceForDeployment("cisco"),
 		createTestDeviceForDeployment("cisco"),
@@ -207,19 +206,19 @@ func TestDeployToMultipleDevicesStopsOnFailure(t *testing.T) {
 	devices[0].ID = "device-01"
 	devices[1].ID = "device-02"
 	devices[2].ID = "device-03"
-	
+
 	configs := map[string]string{
 		"device-01": "config-01",
 		"device-02": "config-02",
 		"device-03": "config-03",
 	}
-	
+
 	results := deployer.DeployToMultipleDevices(devices, configs)
-	
+
 	if len(results) != 1 {
 		t.Errorf("Expected 1 result (stopped on first failure), got %d", len(results))
 	}
-	
+
 	if results[0].Success {
 		t.Error("Expected first deployment to fail")
 	}
@@ -228,24 +227,24 @@ func TestDeployToMultipleDevicesStopsOnFailure(t *testing.T) {
 func TestDeployToMultipleDevicesMissingConfig(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{}
 	deployer := NewConfigDeployer(mockStrategy)
-	
-	devices := []*Device{
+
+	devices := []*model.Device{
 		createTestDeviceForDeployment("cisco"),
 		createTestDeviceForDeployment("cisco"),
 	}
 	devices[0].ID = "device-01"
 	devices[1].ID = "device-02"
-	
+
 	configs := map[string]string{
 		"device-01": "config-01",
 	}
-	
+
 	results := deployer.DeployToMultipleDevices(devices, configs)
-	
+
 	if len(results) != 1 {
 		t.Errorf("Expected 1 result (device-02 skipped), got %d", len(results))
 	}
-	
+
 	if results[0].DeviceID != "device-01" {
 		t.Error("Expected only device-01 to be deployed")
 	}
@@ -264,19 +263,19 @@ interface GigabitEthernet0/0/0
 ! Another comment
 end
 `
-	
+
 	normalized := normalizeConfig(config)
-	
+
 	for _, line := range normalized {
 		if strings.HasPrefix(line, "!") {
 			t.Error("Normalized config should not contain comment lines")
 		}
-		
+
 		if line == "" {
 			t.Error("Normalized config should not contain empty lines")
 		}
 	}
-	
+
 	if !containsLine(normalized, "hostname test-router") {
 		t.Error("Normalized config should contain hostname line")
 	}
@@ -297,7 +296,7 @@ func TestIsCriticalLine(t *testing.T) {
 		{"shutdown", false},
 		{"end", false},
 	}
-	
+
 	for _, tc := range tests {
 		result := isCriticalLine(tc.line)
 		if result != tc.critical {
@@ -312,7 +311,7 @@ func TestContainsLine(t *testing.T) {
 		"interface GigabitEthernet0/0/0",
 		"ip address 192.168.1.1 255.255.255.0",
 	}
-	
+
 	tests := []struct {
 		target   string
 		expected bool
@@ -324,7 +323,7 @@ func TestContainsLine(t *testing.T) {
 		{"nonexistent", false},
 		{"hostname other-router", false},
 	}
-	
+
 	for _, tc := range tests {
 		result := containsLine(lines, tc.target)
 		if result != tc.expected {
@@ -339,15 +338,15 @@ func TestConfigBackup(t *testing.T) {
 		Timestamp: time.Now(),
 		Config:    "hostname test-router\n",
 	}
-	
+
 	if backup.DeviceID != "test-device" {
 		t.Errorf("Expected device ID test-device, got %s", backup.DeviceID)
 	}
-	
+
 	if backup.Config == "" {
 		t.Error("Expected non-empty config")
 	}
-	
+
 	if backup.Timestamp.IsZero() {
 		t.Error("Expected non-zero timestamp")
 	}
@@ -366,19 +365,19 @@ func TestDeploymentResultStructure(t *testing.T) {
 			Config:    "backup config",
 		},
 	}
-	
+
 	if result.DeviceID != "test-device" {
 		t.Errorf("Expected device ID test-device, got %s", result.DeviceID)
 	}
-	
+
 	if !result.Success {
 		t.Error("Expected success to be true")
 	}
-	
+
 	if result.Duration != 5*time.Second {
 		t.Errorf("Expected duration 5s, got %v", result.Duration)
 	}
-	
+
 	if result.Backup == nil {
 		t.Error("Expected backup to be set")
 	}
@@ -386,7 +385,7 @@ func TestDeploymentResultStructure(t *testing.T) {
 
 func TestConfigMatchesWithCriticalLines(t *testing.T) {
 	strategy := &FullReplaceStrategy{}
-	
+
 	current := `
 hostname test-router
 interface GigabitEthernet0/0/0
@@ -395,14 +394,14 @@ interface GigabitEthernet0/0/0
 router ospf 100
  network 192.168.1.0 0.0.0.255 area 0
 `
-	
+
 	expected := `
 hostname test-router
 interface GigabitEthernet0/0/0
  ip address 192.168.1.1 255.255.255.0
 router ospf 100
 `
-	
+
 	if !strategy.configMatches(current, expected) {
 		t.Error("Expected configs to match on critical lines")
 	}
@@ -410,18 +409,18 @@ router ospf 100
 
 func TestConfigMatchesFailsWithoutCriticalLines(t *testing.T) {
 	strategy := &FullReplaceStrategy{}
-	
+
 	current := `
 description Some interface
 mtu 1500
 shutdown
 `
-	
+
 	expected := `
 hostname test-router
 interface GigabitEthernet0/0/0
 `
-	
+
 	if strategy.configMatches(current, expected) {
 		t.Error("Expected configs not to match without critical lines")
 	}
@@ -429,20 +428,20 @@ interface GigabitEthernet0/0/0
 
 func TestMockStrategyRollback(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{}
-	
+
 	device := createTestDeviceForDeployment("cisco")
 	backupConfig := "hostname backup-config\n"
-	
+
 	err := mockStrategy.Rollback(device, backupConfig)
-	
+
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
-	
+
 	if !mockStrategy.rollbackCalled {
 		t.Error("Expected Rollback to be called")
 	}
-	
+
 	if mockStrategy.backupConfig != backupConfig {
 		t.Errorf("Expected backup config %s, got %s", backupConfig, mockStrategy.backupConfig)
 	}
@@ -453,15 +452,15 @@ func TestMockStrategyRollbackWithError(t *testing.T) {
 	mockStrategy := &MockDeploymentStrategy{
 		rollbackError: expectedError,
 	}
-	
+
 	device := createTestDeviceForDeployment("cisco")
-	
+
 	err := mockStrategy.Rollback(device, "config")
-	
+
 	if err == nil {
 		t.Error("Expected error from rollback")
 	}
-	
+
 	if err != expectedError {
 		t.Errorf("Expected error %v, got %v", expectedError, err)
 	}
@@ -473,63 +472,21 @@ func TestDeploymentResultWithError(t *testing.T) {
 		deployError: deployError,
 	}
 	deployer := NewConfigDeployer(mockStrategy)
-	
+
 	device := createTestDeviceForDeployment("cisco")
 	config := "hostname test\n"
-	
+
 	result := deployer.DeployToDevice(device, config)
-	
+
 	if result.Success {
 		t.Error("Expected deployment to fail")
 	}
-	
+
 	if result.Error == nil {
 		t.Error("Expected error to be set in result")
 	}
-	
+
 	if result.Error != deployError {
 		t.Errorf("Expected error %v, got %v", deployError, result.Error)
-	}
-}
-
-func TestMultipleDeploymentsIndependence(t *testing.T) {
-	callCount := 0
-	mockStrategy := &MockDeploymentStrategy{}
-	
-	originalDeploy := mockStrategy.Deploy
-	mockStrategy.Deploy = func(device *Device, config string) error {
-		callCount++
-		if callCount == 1 {
-			return errors.New("first deployment fails")
-		}
-		return originalDeploy(device, config)
-	}
-	
-	deployer := NewConfigDeployer(mockStrategy)
-	
-	devices := []*model.Device{
-		createTestDeviceForDeployment("cisco"),
-		createTestDeviceForDeployment("cisco"),
-	}
-	devices[0].ID = "device-01"
-	devices[1].ID = "device-02"
-	
-	configs := map[string]string{
-		"device-01": "config-01",
-		"device-02": "config-02",
-	}
-	
-	results := deployer.DeployToMultipleDevices(devices, configs)
-	
-	if len(results) != 1 {
-		t.Errorf("Expected 1 result, got %d", len(results))
-	}
-	
-	if results[0].Success {
-		t.Error("Expected first deployment to fail")
-	}
-	
-	if callCount != 1 {
-		t.Errorf("Expected Deploy to be called once, was called %d times", callCount)
 	}
 }

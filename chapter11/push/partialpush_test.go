@@ -2,11 +2,10 @@ package push
 
 import (
 	"errors"
+	"model"
 	"strings"
 	"testing"
 	"time"
-	"model"
-	"render"
 )
 
 func createJuniperTestDevice() *model.Device {
@@ -17,12 +16,12 @@ func createJuniperTestDevice() *model.Device {
 		Vendor:       "juniper",
 		Model:        "EX4300",
 		ManagementIP: "10.0.1.20",
-		Location: Location{
+		Location: model.Location{
 			Datacenter: "dc-test",
 			Rack:       "R01",
 			Position:   "U10",
 		},
-		Interfaces: []Interface{
+		Interfaces: []model.Interface{
 			{
 				Name:        "ge-0/0/0",
 				Description: "Test interface",
@@ -41,19 +40,19 @@ func createJuniperTestDevice() *model.Device {
 				Duplex:      "auto",
 			},
 		},
-		Services: Services{
-			NTP: NTPService{
+		Services: model.Services{
+			NTP: model.NTPService{
 				Enabled: true,
 				Servers: []string{"10.0.0.1", "10.0.0.2"},
 			},
-			SNMP: SNMPService{
+			SNMP: model.SNMPService{
 				Enabled:   true,
 				Community: "public",
 				Location:  "Test Lab",
 				Contact:   "admin@test.com",
 			},
 		},
-		VLANs: []VLAN{
+		VLANs: []model.VLAN{
 			{
 				ID:          100,
 				Name:        "test-vlan",
@@ -65,8 +64,8 @@ func createJuniperTestDevice() *model.Device {
 				Description: "Management VLAN",
 			},
 		},
-		Routing: &Routing{
-			StaticRoutes: []StaticRoute{
+		Routing: &model.Routing{
+			StaticRoutes: []model.StaticRoute{
 				{
 					Destination: "10.0.0.0/8",
 					NextHop:     "192.168.1.2",
@@ -442,7 +441,7 @@ func TestElementUpdateResultWithError(t *testing.T) {
 
 func TestParseConfigToElementsEmptyDevice(t *testing.T) {
 	strategy := NewPerElementStrategy("admin", "password", 30*time.Second)
-	device := &Device{
+	device := &model.Device{
 		ID:       "empty-device",
 		Hostname: "empty",
 		Vendor:   "juniper",

@@ -442,7 +442,7 @@ func TestGetMaskBits(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		result := getMaskBits(tc.mask)
+		result := GetMaskBits(tc.mask)
 		if result != tc.expected {
 			t.Errorf("getMaskBits(%s) = %s, expected %s", tc.mask, result, tc.expected)
 		}

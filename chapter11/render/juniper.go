@@ -72,7 +72,7 @@ interfaces {
 {{- if .IPAddress}}
         unit 0 {
             family inet {
-                address {{.IPAddress}}/{{getMaskBits .SubnetMask}};
+                address {{.IPAddress}}/{{GetMaskBits .SubnetMask}};
             }
         }
 {{- end}}

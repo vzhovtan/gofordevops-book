@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -126,7 +125,7 @@ type InfrastructureModel struct {
 }
 
 // Template function helpers
-func getMaskBits(mask string) string {
+func GetMaskBits(mask string) string {
 	masks := map[string]string{
 		"255.255.255.252": "30",
 		"255.255.255.0":   "24",
@@ -160,7 +159,7 @@ type CiscoGenerator struct {
 
 func NewCiscoGenerator() (*CiscoGenerator, error) {
 	funcMap := template.FuncMap{
-		"getMaskBits": getMaskBits,
+		"GetMaskBits": GetMaskBits,
 		"join":        join,
 	}
 
@@ -196,7 +195,7 @@ type JuniperGenerator struct {
 
 func NewJuniperGenerator() (*JuniperGenerator, error) {
 	funcMap := template.FuncMap{
-		"getMaskBits": getMaskBits,
+		"GetMaskBits": GetMaskBits,
 		"join":        join,
 	}
 

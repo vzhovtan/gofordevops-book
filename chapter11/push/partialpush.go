@@ -3,10 +3,10 @@ package push
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 	"model"
 	"render"
+	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -175,7 +175,7 @@ func (s *PerElementStrategy) parseConfigToElements(config string, device *model.
 		}
 
 		if iface.IPAddress != "" {
-			cidrBits := render.getMaskBits(iface.SubnetMask)
+			cidrBits := render.GetMaskBits(iface.SubnetMask)
 			elements = append(elements, ConfigElement{
 				Type:        "interface",
 				Path:        fmt.Sprintf("interfaces %s unit 0 family inet", iface.Name),

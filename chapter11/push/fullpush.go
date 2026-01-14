@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"model"
 	"strings"
 	"time"
-	"model"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -43,7 +43,7 @@ func NewFullReplaceStrategy(username, password string, timeout time.Duration) *F
 	}
 }
 
-func (s *FullReplaceStrategy) connectSSH(device *Device) (*ssh.Client, error) {
+func (s *FullReplaceStrategy) connectSSH(device *model.Device) (*ssh.Client, error) {
 	addr := fmt.Sprintf("%s:22", device.ManagementIP)
 	client, err := ssh.Dial("tcp", addr, s.sshConfig)
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *FullReplaceStrategy) executeCommand(client *ssh.Client, cmd string) (st
 	return string(output), nil
 }
 
-func (s *FullReplaceStrategy) BackupCurrentConfig(device *Device) (*ConfigBackup, error) {
+func (s *FullReplaceStrategy) BackupCurrentConfig(device *model.Device) (*ConfigBackup, error) {
 	client, err := s.connectSSH(device)
 	if err != nil {
 		return nil, err
@@ -300,7 +300,7 @@ func NewConfigDeployer(strategy DeploymentStrategy) *ConfigDeployer {
 	}
 }
 
-func (d *ConfigDeployer) DeployToDevice(device *.model.Device, config string) *DeploymentResult {
+func (d *ConfigDeployer) DeployToDevice(device *model.Device, config string) *DeploymentResult {
 	startTime := time.Now()
 	result := &DeploymentResult{
 		DeviceID:  device.ID,
