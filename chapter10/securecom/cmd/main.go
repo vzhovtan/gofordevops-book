@@ -7,40 +7,6 @@ import (
 	"securecom"
 )
 
-//func main() {
-//	//define CLI flags
-//	hostname := flag.String("hostname", "", "Device hostname or IP address")
-//	username := flag.String("username", "", "SSH username")
-//	password := flag.String("password", "", "SSH password")
-//	port := flag.Int("port", 22, "SSH port (default: 22)")
-//	command := flag.String("command", "show configuration", "Command to execute")
-//	timeout := flag.Int("timeout", 30, "Connection timeout in seconds")
-//	outputFile := flag.String("output", "", "Save output to file (optional)")
-//
-//	flag.Parse()
-//
-//	// flags validation
-//	if *hostname == "" {
-//		fmt.Println("Error: hostname is required")
-//		flag.Usage()
-//		os.Exit(1)
-//	}
-//
-//	if *username == "" {
-//		fmt.Println("Error: username is required")
-//		flag.Usage()
-//		os.Exit(1)
-//	}
-//
-//	if *password == "" {
-//		fmt.Println("Error: password is required")
-//		flag.Usage()
-//		os.Exit(1)
-//	}
-//
-//	securecom.ConnectAndRun(hostname, username, password, command, outputFile, port, timeout)
-//}
-
 func main() {
 	// Define command-line flags
 	hostname := flag.String("hostname", "", "Server hostname or IP address")
