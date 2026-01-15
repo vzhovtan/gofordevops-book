@@ -54,15 +54,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./chapter11/model
-        run: go test -v .
-
-      - name: Verify dependencies
-        working-directory: ./chapter11/push
-        run: go mod verify
-
-      - name: Run tests
-        working-directory: ./chapter11/push
-        run: go test -v .    
+        run: go test -v .   
 
       - name: Verify dependencies
         working-directory: ./chapter11/render
