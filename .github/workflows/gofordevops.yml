@@ -48,7 +48,7 @@ jobs:
         working-directory: ./chapter10/crawler
         run: go test -v .
 
-       - name: Verify dependencies
+      - name: Verify dependencies
         working-directory: ./chapter11/model
         run: go mod verify
 
@@ -56,7 +56,7 @@ jobs:
         working-directory: ./chapter11/model
         run: go test -v .
 
-       - name: Verify dependencies
+      - name: Verify dependencies
         working-directory: ./chapter11/push
         run: go mod verify
 
@@ -64,7 +64,7 @@ jobs:
         working-directory: ./chapter11/push
         run: go test -v .    
 
-       - name: Verify dependencies
+      - name: Verify dependencies
         working-directory: ./chapter11/render
         run: go mod verify
 
