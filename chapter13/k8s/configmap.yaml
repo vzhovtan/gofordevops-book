@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crawler-config
+  namespace: automation
+data:
+  log-level: "info"
+  concurrent-devices: "10"
+  crawler.yaml: |
+    server:
+      metrics_port: 9090
+      health_check_interval: 60s
+    discovery:
+      network_ranges:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+      concurrent_scans: 10
+    inventory:
+      database_url: postgres://crawler@postgres:5432/inventory
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: crawler-secrets
+  namespace: automation
+type: Opaque
+stringData:
+  postgres-password: "changeme"
+  ssh-private-key: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+    -----END OPENSSH PRIVATE KEY-----

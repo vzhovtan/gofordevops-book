@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-deployment
+  namespace: automation
+  labels:
+    app: crawler
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crawler
+      component: worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: crawler
+        component: worker
+        version: v1.0.0
+    spec:
+      containers:
+      - name: crawler
+        image: registry.example.com/infrastructure-crawler:1.0.0
+        ports:
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: CRAWLER_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: crawler-config
+              key: log-level
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: postgres-password
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        volumeMounts:
+        - name: ssh-keys
+          mountPath: /home/crawler/.ssh
+          readOnly: true
+      volumes:
+      - name: ssh-keys
+        secret:
+          secretName: crawler-ssh-keys
+          defaultMode: 0400
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: crawler
+              topologyKey: kubernetes.io/hostname

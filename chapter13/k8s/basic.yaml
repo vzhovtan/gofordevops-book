@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: infrastructure-crawler
+  namespace: automation
+  labels:
+    app: crawler
+    component: worker
+    version: v1.0.0
+  annotations:
+    description: "Network infrastructure discovery and inventory crawler"
+spec:
+  containers:
+  - name: crawler
+    image: registry.example.com/infrastructure-crawler:1.0.0
+    ports:
+    - containerPort: 9090
+      name: metrics
+      protocol: TCP
+    env:
+    - name: CRAWLER_LOG_LEVEL
+      value: "info"
+    - name: CRAWLER_CONCURRENT_DEVICES
+      value: "10"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+    volumeMounts:
+    - name: config
+      mountPath: /app/configs
+      readOnly: true
+    - name: ssh-keys
+      mountPath: /home/crawler/.ssh
+      readOnly: true
+    - name: data
+      mountPath: /app/data
+    livenessProbe:
+      httpGet:
+        path: /metrics
+        port: 9090
+      initialDelaySeconds: 30
+      periodSeconds: 60
+    readinessProbe:
+      httpGet:
+        path: /metrics
+        port: 9090
+      initialDelaySeconds: 10
+      periodSeconds: 30
+  volumes:
+  - name: config
+    configMap:
+      name: crawler-config
+  - name: ssh-keys
+    secret:
+      secretName: crawler-ssh-keys
+      defaultMode: 0400
+  - name: data
+    persistentVolumeClaim:
+      claimName: crawler-data
+  restartPolicy: Always
