@@ -1,0 +1,25 @@
+---
+- name: Discover network infrastructure
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Execute infrastructure crawl
+      crawler_module:
+        network_ranges:
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+        concurrent_devices: 20
+        database_url: "postgresql://crawler:password@localhost/inventory"
+        ssh_key_path: "/home/ansible/.ssh/network_devices_key"
+        ssh_username: "admin"
+        log_level: "info"
+      register: crawl_result
+    
+    - name: Display crawl results
+      debug:
+        msg: "Discovered {{ crawl_result.devices_discovered }} devices in {{ crawl_result.crawl_duration_seconds }} seconds"
+    
+    - name: Show devices by vendor
+      debug:
+        var: crawl_result.devices_by_vendor

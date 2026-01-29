@@ -1,0 +1,9 @@
+---
+- name: Deploy Apache with custom configuration
+  hosts: webservers
+  become: yes
+  
+  roles:
+    - role: apache
+      vars:
+        http_port: 8080

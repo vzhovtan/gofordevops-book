@@ -1,0 +1,40 @@
+---
+- name: Install and configure Apache web server
+  hosts: webservers
+  become: yes
+  
+  tasks:
+    - name: Install Apache package
+      package:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: present
+      
+    - name: Create custom index page
+      copy:
+        content: |
+          <html>
+          <head><title>Welcome</title></head>
+          <body><h1>Server {{ ansible_hostname }}</h1></body>
+          </html>
+        dest: /var/www/html/index.html
+        mode: '0644'
+      notify: Restart Apache
+      
+    - name: Configure Apache to listen on custom port
+      lineinfile:
+        path: "{{ '/etc/httpd/conf/httpd.conf' if ansible_os_family == 'RedHat' else '/etc/apache2/ports.conf' }}"
+        regexp: '^Listen '
+        line: "Listen {{ http_port }}"
+      notify: Restart Apache
+      
+    - name: Ensure Apache is started and enabled
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: started
+        enabled: yes
+  
+  handlers:
+    - name: Restart Apache
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: restarted

@@ -1,0 +1,5 @@
+---
+http_port: 80
+apache_package_name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+apache_service_name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+apache_config_path: "{{ '/etc/httpd/conf/httpd.conf' if ansible_os_family == 'RedHat' else '/etc/apache2/ports.conf' }}"

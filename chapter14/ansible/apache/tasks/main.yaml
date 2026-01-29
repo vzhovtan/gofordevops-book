@@ -1,0 +1,25 @@
+---
+- name: Install Apache package
+  package:
+    name: "{{ apache_package_name }}"
+    state: present
+
+- name: Deploy custom index page
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    mode: '0644'
+  notify: Restart Apache
+
+- name: Configure Apache listening port
+  lineinfile:
+    path: "{{ apache_config_path }}"
+    regexp: '^Listen '
+    line: "Listen {{ http_port }}"
+  notify: Restart Apache
+
+- name: Ensure Apache is running and enabled
+  service:
+    name: "{{ apache_service_name }}"
+    state: started
+    enabled: yes
