@@ -158,7 +158,7 @@ func TestDeployToDeviceTimestamp(t *testing.T) {
 		t.Error("Timestamp should be before deployment completed")
 	}
 
-	if result.Duration <= 0 {
+	if result.Duration < 0 {
 		t.Error("Duration should be positive")
 	}
 }

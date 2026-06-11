@@ -1,8 +1,8 @@
 module push
 
-replace model => /home/vzhovtan/gosrc/gofordevops-book/chapter11/model
+replace model => ../model
 
-replace render => /home/vzhovtan/gosrc/gofordevops-book/chapter11/render
+replace render => ../render
 
 go 1.24.0
 
