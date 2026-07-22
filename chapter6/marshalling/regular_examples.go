@@ -24,5 +24,6 @@ func BasicMarshalling() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("--- 0. Regular Marshaling ---")
 	fmt.Println(string(jsonData))
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Person struct {
@@ -16,7 +16,7 @@ type Person struct {
 
 func SQLCRUD() {
 	// Open or create database
-	db, err := sql.Open("sqlite3", "test.db")
+	db, err := sql.Open("sqlite", "test.db")
 	if err != nil {
 		log.Fatal(err)
 	}

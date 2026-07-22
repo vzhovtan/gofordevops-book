@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	panicrecover.FileOpenRead("nonexistingfile.txt")
+	// panicrecover.FileOpenRead("nonexistingfile.txt")
 
 	fmt.Println("Example 1: Safe division")
 	panicrecover.SafeDivision(10, 2)

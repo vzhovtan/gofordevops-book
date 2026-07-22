@@ -3,12 +3,17 @@ package workflow_test
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"testing"
 	"workflow"
 )
 
 var tRoot = "./testdata"
-var tStat = []string{"testdata/gopher1.png", "testdata/gopher2.png", "testdata/gopher3.png", "testdata/gopher4.png"}
+var path1 = filepath.Join("testdata", "gopher1.png")
+var path2 = filepath.Join("testdata", "gopher2.png")
+var path3 = filepath.Join("testdata", "gopher3.png")
+var path4 = filepath.Join("testdata", "gopher4.png")
+var tStat = []string{path1, path2, path3, path4}
 
 func TestGetStat(t *testing.T) {
 	out := new(bytes.Buffer)

@@ -5,9 +5,8 @@ import (
 	"os"
 )
 
-func FileOpenRead(fpath string) {
-	// Read the file
-	data, err := os.ReadFile(fpath)
+func FileOpenRead(path string) {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}

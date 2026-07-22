@@ -19,7 +19,7 @@ func TestAdd1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testname := fmt.Sprintf("Ruuning Mutiply function with the arguments %d and %d", tt.a, tt.b)
+		testname := fmt.Sprintf("Runing Mutiply function with the arguments %d and %d", tt.a, tt.b)
 		t.Run(testname, func(t *testing.T) {
 			got := table.Multiply(tt.a, tt.b)
 			if got != tt.want {
