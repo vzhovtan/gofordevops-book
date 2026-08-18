@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAdd1(t *testing.T) {
+func TestMultiply(t *testing.T) {
 	var tests = []struct {
 		a, b int
 		want int
